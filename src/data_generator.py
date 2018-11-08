@@ -8,22 +8,20 @@ class DataGenerator(keras.utils.Sequence):
   'Generates data for Keras'
   def __init__(
     self, available_ids, class_names, examples_per_class, examples_dir,
-    image_width=28, batch_size=32, enable_logging=False):
+    image_width=28, batch_size=32):
     'Initialization'
     self.available_ids = available_ids
     self.class_names = class_names
     self.examples_per_class = examples_per_class
     self.image_width = image_width
     self.batch_size = batch_size # Assumes each class has at exactly 'examples_per_class' examples available
-    self.enable_logging = enable_logging
 
     # Loop through every class, and create an mmap numpy array, referencing each class training set
     # directly from disk instead of
     log('Loading examples')
-    self.examples_by_class = np.ndarray((len(class_names), examples_per_class, image_width ** 2), dtype=int)
+    self.examples_by_class = np.empty(len(class_names), dtype=object)
     for i, class_name in enumerate(progress(class_names)):
-      all_examples_by_class = load_examples_for_class(class_name, examples_dir, mmap_mode='r')
-      self.examples_by_class[i] = all_examples_by_class[0:examples_per_class]
+      self.examples_by_class[i] = load_examples_for_class(class_name, examples_dir, mmap_mode='r')
     
     self.on_epoch_end()
 
@@ -43,12 +41,6 @@ class DataGenerator(keras.utils.Sequence):
     # Generate data
     x, y = self.__data_generation(batch_ids)
 
-    if self.enable_logging: 
-      if self.progress_bar is None:
-        self.progress_bar = progress(iterable=None, total=len(self))
-      else:
-        self.progress_bar.update()
-
     return x, y
 
   def on_epoch_end(self):
@@ -61,10 +53,6 @@ class DataGenerator(keras.utils.Sequence):
     '''
     self.indexes = np.arange(len(self.available_ids))
     np.random.shuffle(self.indexes)
-
-    # Setup progress bar for tracking progress of training
-    if self.enable_logging:
-      self.progress_bar = None
 
   def __data_generation(self, ids):
     'Generates data containing batch_size samples'

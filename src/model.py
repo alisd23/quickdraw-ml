@@ -1,5 +1,11 @@
 import tensorflow as tf
-from tensorflow.keras import layers, Sequential
+from tensorflow.keras import layers, Sequential, metrics
+
+def top_1_accuracy(y_true, y_pred):
+  return metrics.top_k_categorical_accuracy(y_true, y_pred, k=1)
+
+def top_5_accuracy(y_true, y_pred):
+  return metrics.top_k_categorical_accuracy(y_true, y_pred, k=5)
 
 def create_model(image_width, num_classes, image_channels=1):
   model = Sequential()
@@ -34,9 +40,11 @@ def create_model(image_width, num_classes, image_channels=1):
   model.add(layers.Dense(num_classes, activation='softmax')) 
   # Train model
   adam = tf.keras.optimizers.Adam()
+
   model.compile(
     loss='categorical_crossentropy',
     optimizer=adam,
-    metrics=['top_k_categorical_accuracy']
+    metrics=[top_1_accuracy, top_5_accuracy]
   )
+
   return model
