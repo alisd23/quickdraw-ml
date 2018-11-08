@@ -27,12 +27,20 @@ parser.add_argument(
   help='Number of examples to use for each class in the full training set',
   default=1000
 )
+parser.add_argument(
+  '--no-save',
+  dest='save',
+  action='store_false',
+  help='If set the model/parameters are not saved',
+  default=True
+)
 
 args = parser.parse_args()
 
 title('Arguments')
 log(f'Number of workers: {args.workers}')
 log(f'Examples per class: {args.examples}')
+log(f'Will save/upload model: {args.save}')
 
 # Constants
 EXAMPLES_DIR = os.path.abspath('examples')
@@ -82,7 +90,7 @@ train_ids = all_ids[0:validation_split_point]
 validation_ids = all_ids[validation_split_point:test_split_point]
 test_ids = all_ids[test_split_point:dataset_size]
 
-title('Dataset Sizes')
+title('Initialisation')
 log(f'TRAIN set size: {len(train_ids)}')
 log(f'VALIDATION set size: {len(validation_ids)}')
 log(f'TEST set size: {len(test_ids)}\n')
@@ -97,8 +105,8 @@ model = create_model(IMAGE_WIDTH, len(class_names))
 epochs_count = len(training_generator)
 training_logger = TrainingLogger(epochs_count)
 
-title('Training Model')
 # Train model on dataset
+title('Training Model')
 model.fit_generator(
   generator=training_generator,
   validation_data=validation_generator,
@@ -107,12 +115,12 @@ model.fit_generator(
   workers=WORKERS,
   callbacks=[callbacks.LambdaCallback(
     on_train_begin=lambda logs: training_logger.load(),
-    on_batch_begin=lambda batch, logs: training_logger.update()
+    on_batch_end=lambda batch, logs: training_logger.update(batch, logs)
   )]
 )
 
-title('Testing Model')
 # Evaluate on test set
+title('Testing Model')
 score = model.evaluate_generator(
   generator=test_generator,
   verbose=0
@@ -120,6 +128,9 @@ score = model.evaluate_generator(
 
 log('Top 1 test accuracy: {:0.2f}%'.format(score[1] * 100))
 log('Top 5 test accuracy: {:0.2f}%'.format(score[2] * 100))
+
+if not args.save:
+  exit(0)
 
 title('Saving Model')
 
