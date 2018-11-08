@@ -1,3 +1,4 @@
+import sys
 import os
 import numpy as np
 import argparse
@@ -104,6 +105,10 @@ test_generator = DataGenerator(available_ids=test_ids, **params)
 model = create_model(IMAGE_WIDTH, len(class_names))
 epochs_count = len(training_generator)
 training_logger = TrainingLogger(epochs_count)
+
+# Print model architecture
+print(model.summary())
+sys.stdout.flush()
 
 # Train model on dataset
 title('Training Model')
