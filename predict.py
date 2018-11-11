@@ -1,6 +1,6 @@
 import numpy as np
 import json
-from keras.models import load_model
+from tensorflow.keras.models import load_model
 
 from src.model import top_1_accuracy, top_5_accuracy
 from src.utils import load_class_names
