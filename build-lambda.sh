@@ -27,7 +27,7 @@ virtualenv -p python3 env
 source env/bin/activate
 
 # Install dependencies (assumes pip for python 3)
-pip3 install numpy keras tensorflow
+pip3 install numpy keras tensorflow tqdm
 
 # Install notify tools
 sudo yum-config-manager --enable epel
