@@ -7,43 +7,38 @@ def top_1_accuracy(y_true, y_pred):
 def top_5_accuracy(y_true, y_pred):
   return metrics.top_k_categorical_accuracy(y_true, y_pred, k=5)
 
-def create_model(image_width, num_classes, image_channels=1):
+def create_model(num_classes):
+  input_shape = [28, 28, 1]
   model = Sequential()
-  # Convolution layer 1: 16 3x3 filters, padding calculated as to generate an output shape of
-  # [image_width, image_width, 16] => [X, Y, Depth]
-  model.add(
-    layers.Convolution2D(
-      16,
-      (3, 3),
-      padding='same',
-      input_shape=[image_width, image_width, image_channels],
-      activation='relu'
-    )
-  )
-  # Pooling layer 1: output volume: [image_width / 2, image_width / 2, 16]
-  model.add(layers.MaxPooling2D(pool_size=(2, 2)))
-  # Convolution layer 2: 32 3x3 filters, padding calculated as to generate an output shape of
-  # [32, image_width / 2, image_width / 2]
-  model.add(layers.Convolution2D(32, (3, 3), padding='same', activation='relu'))
-  # Pooling layer 1: output volume: [image_width / 4, image_width / 4, 32]
-  model.add(layers.MaxPooling2D(pool_size=(2, 2)))
-  # Convolution layer 3: 64 3x3 filters, padding calculated as to generate an output shape of
-  # [64, image_width / 4, image_width / 4, 64]
-  model.add(layers.Convolution2D(64, (3, 3), padding='same', activation='relu'))
-  # Pooling layer 1: output volume: [image_width / 8, image_width / 8, 64]
-  model.add(layers.MaxPooling2D(pool_size=(2,2)))
-  # Flatten 2D image data to create 1D array: [(image_width / 8) * (image_width / 8) * 64]
+
+  # Convolution layer 1: 28 3x3 filters, input=[28, 28, 1], output=[26, 26, 28]
+  model.add(layers.Conv2D(32, kernel_size=3, input_shape=input_shape, activation='relu'))
+  model.add(layers.BatchNormalization())
+  model.add(layers.Conv2D(32, kernel_size=3, activation='relu'))
+  model.add(layers.BatchNormalization())
+  model.add(layers.Conv2D(32, kernel_size=5, strides=2, padding='same', activation='relu'))
+  model.add(layers.BatchNormalization())
+  model.add(layers.Dropout(0.4))
+
+  model.add(layers.Conv2D(64, kernel_size=3, activation='relu'))
+  model.add(layers.BatchNormalization())
+  model.add(layers.Conv2D(64, kernel_size=3, activation='relu'))
+  model.add(layers.BatchNormalization())
+  model.add(layers.Conv2D(64, kernel_size=5, strides=2, padding='same', activation='relu'))
+  model.add(layers.BatchNormalization())
+  model.add(layers.Dropout(0.4))
+
   model.add(layers.Flatten())
-  # First fully connected layer, 1D array of [128]
-  model.add(layers.Dense(128, activation='relu'))
+  # First fully connected layer, 1D array of [1028]
+  model.add(layers.Dense(1028, activation='relu'))
+  model.add(layers.BatchNormalization())
+  model.add(layers.Dropout(0.4))
   # Final fully connected layer into 1D array of class scores - 1 element per class prediction 
-  model.add(layers.Dense(num_classes, activation='softmax')) 
-  # Train model
-  adam = tf.keras.optimizers.Adam()
+  model.add(layers.Dense(num_classes, activation='softmax'))
 
   model.compile(
     loss='categorical_crossentropy',
-    optimizer=adam,
+    optimizer=tf.keras.optimizers.Adam(),
     metrics=[top_1_accuracy, top_5_accuracy]
   )
 

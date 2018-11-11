@@ -102,7 +102,7 @@ validation_generator = DataGenerator(available_ids=validation_ids, **params)
 test_generator = DataGenerator(available_ids=test_ids, **params)
 
 # Create keras model
-model = create_model(IMAGE_WIDTH, len(class_names))
+model = create_model(len(class_names))
 epochs_count = len(training_generator)
 training_logger = TrainingLogger(epochs_count)
 
